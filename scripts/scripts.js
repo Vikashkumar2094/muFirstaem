@@ -20,7 +20,6 @@ import {
 function buildHeroBlock(main) {
   const h1 = main.querySelector('h1');
   const picture = main.querySelector('picture');
-  // eslint-disable-next-line no-bitwise
   if (h1 && picture && (h1.compareDocumentPosition(picture) & Node.DOCUMENT_POSITION_PRECEDING)) {
     const section = document.createElement('div');
     section.append(buildBlock('hero', { elems: [picture, h1] }));
@@ -48,7 +47,6 @@ function buildAutoBlocks(main) {
   try {
     buildHeroBlock(main);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Auto Blocking failed', error);
   }
 }
@@ -57,14 +55,44 @@ function buildAutoBlocks(main) {
  * Decorates the main element.
  * @param {Element} main The main element
  */
-// eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
-  // hopefully forward compatible button decoration
   decorateButtons(main);
   decorateIcons(main);
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
+}
+
+/**
+ * Loads embedded messaging script.
+ */
+function loadEmbeddedMessaging() {
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.textContent = `
+    function initEmbeddedMessaging() {
+      try {
+        embeddedservice_bootstrap.settings.language = 'en_US';
+        embeddedservice_bootstrap.init(
+          '00D2t000000pdcQ',
+          'MIAW',
+          'https://wise-otter-721unq-dev-ed.trailblaze.my.site.com/ESWMIAW1734539716133',
+          {
+            scrt2URL: 'https://wise-otter-721unq-dev-ed.trailblaze.my.salesforce-scrt.com'
+          }
+        );
+      } catch (err) {
+        console.error('Error loading Embedded Messaging: ', err);
+      }
+    }
+  `;
+  document.head.appendChild(script);
+
+  const bootstrapScript = document.createElement('script');
+  bootstrapScript.type = 'text/javascript';
+  bootstrapScript.src = 'https://wise-otter-721unq-dev-ed.trailblaze.my.site.com/ESWMIAW1734539716133/assets/js/bootstrap.min.js';
+  bootstrapScript.onload = initEmbeddedMessaging;
+  document.head.appendChild(bootstrapScript);
 }
 
 /**
@@ -82,7 +110,6 @@ async function loadEager(doc) {
   }
 
   try {
-    /* if desktop (proxy for fast connection) or fonts already loaded, load fonts.css */
     if (window.innerWidth >= 900 || sessionStorage.getItem('fonts-loaded')) {
       loadFonts();
     }
@@ -108,6 +135,9 @@ async function loadLazy(doc) {
 
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   loadFonts();
+
+  // Add embedded messaging script
+  loadEmbeddedMessaging();
 }
 
 /**
@@ -115,11 +145,12 @@ async function loadLazy(doc) {
  * without impacting the user experience.
  */
 function loadDelayed() {
-  // eslint-disable-next-line import/no-cycle
   window.setTimeout(() => import('./delayed.js'), 3000);
-  // load anything that can be postponed to the latest here
 }
 
+/**
+ * Orchestrates the page loading process.
+ */
 async function loadPage() {
   await loadEager(document);
   await loadLazy(document);
